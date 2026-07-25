@@ -43,7 +43,8 @@
     min-height:100vh;
     background:var(--cream);
     position:relative;
-    overflow:hidden;
+    overflow-x:hidden;
+    overflow-y:auto;
     display:flex;
     flex-direction:column;
     box-shadow: 0 0 40px rgba(0,0,0,0.5);
@@ -496,7 +497,7 @@ document.getElementById('modeText').textContent = difficulty.toUpperCase();
 ====================================================================== */
 const OPENROUTER_API_KEY = "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";
 const OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
-const AI_RESPONSE_TIMEOUT_MS = 10000;
+const AI_RESPONSE_TIMEOUT_MS = 5000;
 const TIMER_WARNING_SECONDS = 10;
 const SLOW_NETWORK_EFFECTIVE_TYPES = new Set(['slow-2g', '2g']);
 const SLOW_NETWORK_MAX_DOWNLINK_MBPS = 0.75;
@@ -504,7 +505,7 @@ const SLOW_NETWORK_MIN_RTT_MS = 1200;
 
 // You can use "google/gemini-2.5-flash", "google/gemini-flash-1.5", 
 // "meta-llama/llama-3.3-70b-instruct", or any free/paid model on OpenRouter.
-const OPENROUTER_MODEL = "meta-llama/llama-3.3-70b-instruct";
+const OPENROUTER_MODEL = "google/gemini-2.5-flash";
 
 const DIFFICULTY_DESCRIPTION = {
   Easy:   "a STRICTLY EASY, introductory level (single-step, direct application of rules, small basic numbers only)",
@@ -531,6 +532,8 @@ const KATEX_OPTIONS = {
     { left: '$$', right: '$$', display: true },
     { left: '$', right: '$', display: false }
   ],
+  output: "htmlAndMathml",
+  strict: false,
   throwOnError: false
 };
 
@@ -669,6 +672,10 @@ function isQuestionPayload(parsed){
     && ["A","B","C"].includes(parsed.correctAnswer) && parsed.solution);
 }
 
+function expandQuestionPayload(parsed){
+  return isQuestionPayload(parsed) ? parsed : null;
+}
+
 async function generateQuestion(diff){
   let result;
   const slowConnectionReason = getSlowConnectionReason();
@@ -685,29 +692,6 @@ async function generateQuestion(diff){
       ? `\nDo NOT reuse any of these recent questions, or trivial number-swapped variants of them:\n- ${recentQuestions.join('\n- ')}`
       : '';
 
-    const prompt = `You are a Grade 10 mathematics teacher writing ONE brand-new multiple-choice question at ${DIFFICULTY_DESCRIPTION[diff]} of difficulty.
-Focus specifically on this sub-topic: ${subtopic}.
-This is part of a larger Grade 10 unit on: laws of rational (non-integral) exponents, simplification of radical expressions, and operations involving radical expressions.
-${avoidList}
-
-Return ONLY valid JSON with this exact shape, and nothing else (no markdown fences, no commentary):
-{
-  "question": "Natural plain text. All math MUST be in LaTeX wrapped in $ delimiters (e.g., 'Simplify $\\\\sqrt{49}$').",
-  "options": { "A": "Text with $ LaTeX $", "B": "Text with $ LaTeX $", "C": "Text with $ LaTeX $" },
-  "correctAnswer": "A",
-  "solution": "Step-by-step explanation. All math MUST be in LaTeX wrapped in $ delimiters."
-}
-
-Rules:
-- NEVER use plain keyboard text for math. Do NOT use '/', 'sqrt()', or simple '^' for exponents outside of LaTeX.
-- ALWAYS use proper KaTeX/LaTeX formatting wrapped in single $ delimiters for inline math.
-- Use professional notation: use '\\\\dfrac{a}{b}' for fractions, '\\\\sqrt[n]{x}' for roots, and '$x^{\\\\frac{2}{3}}$' for rational exponents.
-- CRITICAL: In your JSON output, EVERY LaTeX backslash MUST be double-escaped with two backslashes (e.g. \\\\sqrt, \\\\times, \\\\frac, \\\\dfrac).
-- Exactly one of A/B/C is correct; place the correct answer in a random position. Do NOT use the same answer for more than one option.
-- The two wrong options should be plausible common-mistake answers.
-- Keep the question self-contained and unambiguous.
-- CRITICAL OPTION FORMAT: The values for options A, B, and C MUST contain ONLY the final mathematical answer (e.g., '$5\\\\sqrt{2}$' or '$\\\\dfrac{x}{y}$'). Absolutely NO explanatory text, complete sentences, equations (like 'x = ...'), or solution steps are allowed inside the options.`;
-
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), AI_RESPONSE_TIMEOUT_MS);
@@ -722,11 +706,33 @@ Rules:
         },
         body: JSON.stringify({
           model: OPENROUTER_MODEL,
+          temperature: 0.1, 
+          response_format: { type: "json_object" }, 
+          max_tokens: 250,
           messages: [
-            { role: "user", content: prompt }
-          ],
-          temperature: 0.3, // Lowered for more deterministic output
-          response_format: { type: "json_object" } // Enforces JSON structure
+            { 
+              role: "system", 
+              content: `You are an expert Grade 10 mathematics teacher. Generate ONE multiple-choice question.
+
+CRITICAL RULES:
+1. Output ONLY valid JSON. Do not wrap it in markdown. Do not output \`\`\`json or \`\`\`.
+2. Use this exact JSON schema: {"question":"...","options":{"A":"...","B":"...","C":"..."},"correctAnswer":"A","solution":"..."}
+3. ALL math must be wrapped in KaTeX/LaTeX single delimiters: $math$. Do NOT use plain text for math.
+4. EVERY LaTeX backslash in the JSON MUST be double-escaped (e.g., \\\\sqrt, \\\\dfrac, \\\\frac).
+5. Options A, B, and C must contain ONLY the final math answer. No text.
+6. correctAnswer must ALWAYS be "A". The system will shuffle it later.
+7. The solution must be one short sentence maximum with only the critical mathematical steps in LaTeX. No filler or intro text.
+
+One-Shot Example:
+{"question":"Simplify $\\\\sqrt{16x^2}$, assuming $x \\\\ge 0$.","options":{"A":"$4x$","B":"$16x$","C":"$4x^2$"},"correctAnswer":"A","solution":"$\\\\sqrt{16x^2}=\\\\sqrt{16}\\\\sqrt{x^2}=4x$."}`
+   },
+   { 
+   role: "user", 
+   content: `Create a new question at ${DIFFICULTY_DESCRIPTION[diff]}. 
+Sub-topic: ${subtopic}.
+${avoidList}`
+            }
+          ]
         })
       }).finally(() => clearTimeout(timeoutId));
 
@@ -748,8 +754,9 @@ Rules:
         try {
           const candidateJson = normalizeJsonBackslashes(candidate);
           const candidateParsed = JSON.parse(candidateJson);
-          if(isQuestionPayload(candidateParsed)){
-            parsed = candidateParsed;
+          const expandedPayload = expandQuestionPayload(candidateParsed);
+          if(expandedPayload){
+            parsed = expandedPayload;
             break;
           }
           parseError = new Error("JSON object was missing required fields");
@@ -1172,15 +1179,22 @@ function renderLatex(str){
   if(latexCache.has(str)) return latexCache.get(str);
 
   const container = document.createElement('span');
+  container.setAttribute('aria-label', String(str).replace(/\$/g, ''));
   container.textContent = str;
 
-  try{
-    renderMathInElement(container, KATEX_OPTIONS);
-  }catch(e){
-    console.warn('[Quest\'O Carousel] KaTeX auto-render failed, showing raw text instead:', e);
+  if(typeof renderMathInElement !== 'undefined'){
+    try{
+      renderMathInElement(container, KATEX_OPTIONS);
+    }catch(e){
+      console.warn('[Quest\'O Carousel] KaTeX auto-render failed, showing raw text instead:', e);
+    }
   }
 
-  const rendered = container.innerHTML;
+  const rendered = container.outerHTML;
+  if(latexCache.size >= 100){
+    const oldestKey = latexCache.keys().next().value;
+    latexCache.delete(oldestKey);
+  }
   latexCache.set(str, rendered);
   return rendered;
 }
@@ -1288,6 +1302,25 @@ function handleTimeout(){
   playSound('wrong');
   renderIncorrect('Time Expired!');
 }
+
+document.addEventListener('keydown', event => {
+  const keyToLetter = {
+    a: 'A',
+    '1': 'A',
+    b: 'B',
+    '2': 'B',
+    c: 'C',
+    '3': 'C'
+  };
+  const letter = keyToLetter[event.key.toLowerCase()];
+  if(!letter || answered) return;
+
+  const btn = optionButtons.find(button => button.dataset.letter === letter);
+  if(!btn || btn.disabled || btn.classList.contains('disabled')) return;
+
+  event.preventDefault();
+  handleAnswer(letter);
+});
 
 /* ======================================================================
    5. STATE 2 — CORRECT
