@@ -231,6 +231,16 @@
   .opt-btn:hover .marquee{ filter:brightness(1.15); }
   .opt-btn:active .marquee{ filter:brightness(0.9); }
   .opt-btn:disabled, .opt-btn.disabled{ pointer-events:none; opacity:0.6; }
+  /* Fix 4: high-contrast focus ring for keyboard navigation on custom controls. */
+  .opt-btn:focus-visible{ outline:none; }
+  .opt-btn:focus-visible .marquee,
+  .penalty-btn:focus-visible,
+  .skip-solution-btn:focus-visible{
+    outline:4px solid var(--gold);
+    outline-offset:4px;
+    box-shadow:0 0 0 3px var(--maroon-deep), 0 0 14px rgba(246,199,68,0.85);
+    filter:brightness(1.12);
+  }
 
   .opt-btn.correct .marquee{ background: radial-gradient(ellipse at 50% 0%, #1f5a2a, #123a1b 80%); }
   .opt-btn.wrong .marquee{ background: radial-gradient(ellipse at 50% 0%, #6b1414, #3a0808 80%); }
@@ -498,7 +508,8 @@ document.getElementById('modeText').textContent = difficulty.toUpperCase();
 ====================================================================== */
 const OPENROUTER_API_KEY = "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";
 const OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
-const AI_RESPONSE_TIMEOUT_MS = 5000;
+// Fix 1: allow model cold starts/API latency before falling back offline.
+const AI_RESPONSE_TIMEOUT_MS = 10000;
 const TIMER_WARNING_SECONDS = 10;
 const SLOW_NETWORK_EFFECTIVE_TYPES = new Set(['slow-2g', '2g']);
 const SLOW_NETWORK_MAX_DOWNLINK_MBPS = 0.75;
@@ -1035,12 +1046,14 @@ function buildFallbackBank(){
     const constantTerm = r - a * b;
     const coeffTerm = a - b;
     let formattedTerm = "";
-    if (coeffTerm === 1) formattedTerm = `+ \\sqrt{${r}}`;
+    // Fix 3: omit the radical term entirely when the coefficient cancels to zero.
+    if (coeffTerm === 0) formattedTerm = "";
+    else if (coeffTerm === 1) formattedTerm = `+ \\sqrt{${r}}`;
     else if (coeffTerm === -1) formattedTerm = `- \\sqrt{${r}}`;
     else if (coeffTerm > 0) formattedTerm = `+ ${coeffTerm}\\sqrt{${r}}`;
     else formattedTerm = `- ${Math.abs(coeffTerm)}\\sqrt{${r}}`;
     
-    const correctAns = `${constantTerm} ${formattedTerm}`;
+    const correctAns = `${constantTerm} ${formattedTerm}`.trim();
 
     hard.push(makeQuestion(
       `Simplify: $(\\sqrt{${r}} + ${a})(\\sqrt{${r}} - ${b})$`,
@@ -1204,7 +1217,8 @@ function renderLatex(str){
     }
   }
 
-  const rendered = container.outerHTML;
+  // Fix 5: cache only the rendered contents to avoid redundant wrapper spans.
+  const rendered = container.innerHTML;
   if(latexCache.size >= 100){
     const oldestKey = latexCache.keys().next().value;
     latexCache.delete(oldestKey);
@@ -1275,15 +1289,19 @@ function renderActiveGame(){
   });
 
   clearInterval(timerInterval);
+  // Fix 2: calculate time from wall-clock deltas so background tab throttling cannot drift the countdown.
+  const roundEndsAt = Date.now() + cfg.time * 1000;
+  let lastDisplayedSecond = timeLeft;
   timerInterval = setInterval(()=>{
-    timeLeft--;
+    timeLeft = Math.max(0, Math.ceil((roundEndsAt - Date.now()) / 1000));
     updateTimerPill();
-    if(timeLeft > 0 && timeLeft <= TIMER_WARNING_SECONDS) playSound('timer');
+    if(timeLeft !== lastDisplayedSecond && timeLeft > 0 && timeLeft <= TIMER_WARNING_SECONDS) playSound('timer');
+    lastDisplayedSecond = timeLeft;
     if(timeLeft <= 0){
       clearInterval(timerInterval);
       if(!answered) handleTimeout();
     }
-  }, 1000);
+  }, 250);
 }
 
 function updateTimerPill(){
