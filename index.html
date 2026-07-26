@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Quest'O Carousel</title>
+<link rel="icon" href="data:,">
 
 <!-- KaTeX for math rendering -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
@@ -626,6 +627,14 @@ function normalizeJsonBackslashes(jsonString){
   return jsonString.replace(/(^|[^\\])\\(?!["\\])/g, '$1\\\\');
 }
 
+function repairQuestionJson(candidate){
+  return normalizeJsonBackslashes(candidate)
+    .replace(/^\s*```(?:json)?\s*/i, '')
+    .replace(/\s*```\s*$/i, '')
+    .replace(/([{,]\s*)(question|options|correctAnswer|solution|A|B|C)(\s*:)/g, '$1"$2"$3')
+    .replace(/,\s*([}\]])/g, '$1');
+}
+
 function extractBalancedJsonObjects(rawText){
   const objects = [];
 
@@ -715,13 +724,14 @@ async function generateQuestion(diff){
               content: `You are an expert Grade 10 mathematics teacher. Generate ONE multiple-choice question.
 
 CRITICAL RULES:
-1. Output ONLY valid JSON. Do not wrap it in markdown. Do not output \`\`\`json or \`\`\`.
+1. Output ONLY strict RFC 8259 JSON. Do not wrap it in markdown. Do not output \`\`\`json or \`\`\`.
 2. Use this exact JSON schema: {"question":"...","options":{"A":"...","B":"...","C":"..."},"correctAnswer":"A","solution":"..."}
-3. ALL math must be wrapped in KaTeX/LaTeX single delimiters: $math$. Do NOT use plain text for math.
-4. EVERY LaTeX backslash in the JSON MUST be double-escaped (e.g., \\\\sqrt, \\\\dfrac, \\\\frac).
-5. Options A, B, and C must contain ONLY the final math answer. No text.
-6. correctAnswer must ALWAYS be "A". The system will shuffle it later.
-7. The solution must be one short sentence maximum with only the critical mathematical steps in LaTeX. No filler or intro text.
+3. All object keys and string values must use double quotes. Never output JavaScript object notation such as {question:"..."}.
+4. ALL math must be wrapped in KaTeX/LaTeX single delimiters: $math$. Do NOT use plain text for math.
+5. EVERY LaTeX backslash in the JSON MUST be double-escaped (e.g., \\\\sqrt, \\\\dfrac, \\\\frac).
+6. Options A, B, and C must contain ONLY the final math answer. No text.
+7. correctAnswer must ALWAYS be "A". The system will shuffle it later.
+8. The solution must be one short sentence maximum with only the critical mathematical steps in LaTeX. No filler or intro text.
 
 One-Shot Example:
 {"question":"Simplify $\\\\sqrt{16x^2}$, assuming $x \\\\ge 0$.","options":{"A":"$4x$","B":"$16x$","C":"$4x^2$"},"correctAnswer":"A","solution":"$\\\\sqrt{16x^2}=\\\\sqrt{16}\\\\sqrt{x^2}=4x$."}`
@@ -752,7 +762,7 @@ ${avoidList}`
       let parseError = null;
       for(const candidate of jsonCandidates){
         try {
-          const candidateJson = normalizeJsonBackslashes(candidate);
+          const candidateJson = repairQuestionJson(candidate);
           const candidateParsed = JSON.parse(candidateJson);
           const expandedPayload = expandQuestionPayload(candidateParsed);
           if(expandedPayload){
@@ -1105,26 +1115,30 @@ let audioCtx = null;
 let audioUnlocked = false;
 const latexCache = new Map();
 
-function getAudioContext(){
+function getAudioContext(createIfMissing = false){
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   if(!AudioContextClass) return null;
-  if(!audioCtx) audioCtx = new AudioContextClass();
+  if(!audioCtx && createIfMissing) audioCtx = new AudioContextClass();
   return audioCtx;
 }
 
 function unlockAudio(){
-  if(audioUnlocked) return;
-  const ctx = getAudioContext();
+  const ctx = getAudioContext(true);
   if(!ctx) return;
+  if(ctx.state === 'running'){
+    audioUnlocked = true;
+    return;
+  }
 
-  audioUnlocked = true;
-  if(ctx.state === 'suspended') ctx.resume().catch(() => { audioUnlocked = false; });
+  ctx.resume()
+    .then(() => { audioUnlocked = ctx.state === 'running'; })
+    .catch(() => { audioUnlocked = false; });
 }
 
 function playTone(frequency, duration = 0.12, type = 'sine', gainValue = 0.08, delay = 0){
   if(!audioUnlocked) return;
   const ctx = getAudioContext();
-  if(!ctx) return;
+  if(!ctx || ctx.state !== 'running') return;
 
   const oscillator = ctx.createOscillator();
   const gain = ctx.createGain();
