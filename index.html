@@ -31,7 +31,7 @@
   html,body{ margin:0; padding:0; }
 
   body{
-    font-family:'Baloo 2', sans-serif;
+    font-family:'Baloo 2', 'Trebuchet MS', 'Segoe UI', Arial, sans-serif;
     background: var(--maroon-deep);
     display:flex;
     justify-content:center;
@@ -121,7 +121,7 @@
     text-align:center;
   }
   .badge .script{
-    font-family:'Lobster', cursive;
+    font-family:'Lobster', 'Brush Script MT', Georgia, cursive;
     color:var(--gold);
     font-size:1.05rem;
     display:block;
@@ -129,7 +129,7 @@
     text-shadow:0 2px 0 rgba(0,0,0,0.3);
   }
   .badge .block{
-    font-family:'Bungee', system-ui;
+    font-family:'Bungee', Impact, 'Arial Black', system-ui, sans-serif;
     color:var(--gold);
     font-size:1.9rem;
     letter-spacing:2px;
@@ -184,25 +184,61 @@
 
   /* ============ QUESTION AREA ============ */
   .question-box{ margin-top:8px; min-height:150px; }
+  .question-box.card-reveal{ animation: cardReveal 0.55s cubic-bezier(.2,.85,.2,1) both; }
   .question-box .katex{ color:var(--cream); font-size:1.05rem; }
   .timer-row{
     display:flex; justify-content:space-between; align-items:center;
     margin:0 18px 10px;
-    font-family:'Bungee', system-ui;
+    font-family:'Bungee', Impact, 'Arial Black', system-ui, sans-serif;
     color:var(--maroon);
     font-size:0.85rem;
   }
-  .timer-pill{
+  .timer-ring{
+    width:58px;
+    min-height:58px;
+    border-radius:50%;
     background:var(--gold);
     color:var(--maroon-deep);
-    border-radius:999px;
-    padding:4px 14px;
-    font-family:'Bungee', system-ui;
-    font-size:0.95rem;
+    font-family:'Bungee', Impact, 'Arial Black', system-ui, sans-serif;
+    font-size:0.72rem;
     box-shadow: inset 0 -2px 0 rgba(0,0,0,0.15);
+    display:grid;
+    place-items:center;
+    position:relative;
   }
-  .timer-pill.low{ background:#e6533a; color:#fff; animation: pulse 0.6s infinite; }
+  .timer-ring svg{
+    width:46px;
+    height:46px;
+    transform:rotate(-90deg);
+  }
+  .timer-ring .timer-track{
+    fill:none;
+    stroke:rgba(74,14,14,0.2);
+    stroke-width:4;
+  }
+  .timer-ring .timer-progress{
+    fill:none;
+    stroke:var(--maroon-deep);
+    stroke-width:4;
+    stroke-linecap:round;
+    stroke-dasharray:100.53;
+    stroke-dashoffset:0;
+    transition:stroke-dashoffset 0.25s linear, stroke 0.25s ease;
+  }
+  .timer-ring .timer-text{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .timer-ring.low{ background:#e6533a; color:#fff; animation: pulse 0.6s infinite; }
+  .timer-ring.low .timer-progress{ stroke:#fff; }
   @keyframes pulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.08); } }
+  @keyframes cardReveal{
+    from{ opacity:0; filter:blur(10px); transform:translateY(24px) scale(0.98); }
+    to{ opacity:1; filter:blur(0); transform:translateY(0) scale(1); }
+  }
 
   /* ============ OPTION BUTTONS ============ */
   .options{ display:flex; flex-direction:column; gap:12px; margin-top:14px; }
@@ -210,15 +246,18 @@
     all:unset;
     cursor:pointer;
     display:block;
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
   }
   .opt-btn .marquee-inner{
     padding:12px 14px;
     display:flex;
     align-items:center;
     gap:10px;
+    min-height:56px;
   }
   .opt-letter{
-    font-family:'Bungee', system-ui;
+    font-family:'Bungee', Impact, 'Arial Black', system-ui, sans-serif;
     color:var(--gold);
     background:rgba(246,199,68,0.12);
     border:2px solid var(--gold);
@@ -244,11 +283,18 @@
 
   .opt-btn.correct .marquee{ background: radial-gradient(ellipse at 50% 0%, #1f5a2a, #123a1b 80%); }
   .opt-btn.wrong .marquee{ background: radial-gradient(ellipse at 50% 0%, #6b1414, #3a0808 80%); }
+  .opt-btn.shake{ animation: screenShake 0.42s cubic-bezier(.36,.07,.19,.97) both; }
+  @keyframes screenShake{
+    10%,90%{ transform:translateX(-2px); }
+    20%,80%{ transform:translateX(4px); }
+    30%,50%,70%{ transform:translateX(-7px); }
+    40%,60%{ transform:translateX(7px); }
+  }
 
   /* ============ RESULT PANEL ============ */
   .result-banner{
     margin:0 18px 12px;
-    font-family:'Bungee', system-ui;
+    font-family:'Bungee', Impact, 'Arial Black', system-ui, sans-serif;
     text-align:center;
     padding:10px;
     border-radius:8px;
@@ -268,7 +314,7 @@
     font-size:0.92rem;
   }
   .solution-box .label{
-    font-family:'Bungee', system-ui;
+    font-family:'Bungee', Impact, 'Arial Black', system-ui, sans-serif;
     font-size:0.72rem;
     color:var(--maroon);
     margin-bottom:4px;
@@ -288,6 +334,7 @@
     border:2px solid var(--gold);
     border-radius:8px;
     padding:12px 6px;
+    min-height:56px;
   }
   .penalty-btn:hover{ filter:brightness(1.15); }
 
@@ -297,7 +344,7 @@
     display:block;
     margin: 12px auto 0;
     text-align:center;
-    font-family:'Bungee', system-ui;
+    font-family:'Bungee', Impact, 'Arial Black', system-ui, sans-serif;
     font-size:0.78rem;
     color:var(--gold);
     background: linear-gradient(180deg, var(--crimson), var(--maroon));
@@ -308,16 +355,52 @@
   }
   .skip-solution-btn:hover{ filter:brightness(1.15); }
 
-  .card-result{
+  .ticket-card{
     margin:0 18px 16px;
-    text-align:center;
-    font-family:'Baloo 2', sans-serif;
-    font-weight:700;
-    padding:12px;
+    background:linear-gradient(135deg, #ffe89a, var(--gold) 52%, var(--gold-deep));
+    border:3px dashed var(--maroon-deep);
     border-radius:8px;
+    color:var(--maroon-deep);
+    text-align:center;
+    padding:16px 14px;
+    box-shadow:0 10px 24px rgba(74,14,14,0.24), inset 0 0 0 2px rgba(255,255,255,0.35);
+    animation:ticketReveal 0.48s cubic-bezier(.2,.85,.2,1) both;
+    transform-origin:center top;
   }
-  .card-result.benefit{ background:#1f5a2a; color:#d8ffe0; }
-  .card-result.penalty{ background:#8f1d1d; color:#ffe0e0; }
+  .ticket-card .stamp{
+    font-family:'Bungee', Impact, 'Arial Black', system-ui, sans-serif;
+    font-size:0.72rem;
+    letter-spacing:1px;
+  }
+  .ticket-card .outcome{
+    font-family:'Bungee', Impact, 'Arial Black', system-ui, sans-serif;
+    font-size:1.12rem;
+    margin-top:6px;
+  }
+  .ticket-card .detail{ font-weight:800; margin-top:6px; }
+  .ticket-card.good{ border-color:#1f5a2a; }
+  .ticket-card.bad{ border-color:#8f1d1d; }
+  @keyframes ticketReveal{
+    from{ opacity:0; transform:translateY(14px) rotate(-1.5deg) scale(0.98); }
+    70%{ opacity:1; transform:translateY(-2px) rotate(0.7deg) scale(1.01); }
+    to{ opacity:1; transform:translateY(0) rotate(0) scale(1); }
+  }
+
+  .loading-ring{
+    width:44px;
+    height:44px;
+    border:4px solid rgba(246,199,68,0.22);
+    border-top-color:var(--gold);
+    border-radius:50%;
+    margin:0 auto 12px;
+    animation:spin 0.9s linear infinite;
+  }
+  .loading-phrase{
+    font-family:'Bungee', Impact, 'Arial Black', system-ui, sans-serif;
+    color:var(--gold);
+    font-size:0.88rem;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
 
   /* ============ TERMINATION ============ */
   .term-wrap{
@@ -331,7 +414,7 @@
     gap:14px;
   }
   .term-count{
-    font-family:'Bungee', system-ui;
+    font-family:'Bungee', Impact, 'Arial Black', system-ui, sans-serif;
     font-size:3rem;
     color:var(--maroon-deep);
     background:var(--gold);
@@ -342,6 +425,12 @@
   }
   .term-msg{ color:var(--maroon); font-weight:700; font-size:1rem; max-width:280px; }
   .term-fallback{ color:var(--maroon); font-size:0.85rem; opacity:0.75; max-width:280px; }
+  .round-complete{
+    font-family:'Bungee', Impact, 'Arial Black', system-ui, sans-serif;
+    color:var(--maroon-deep);
+    font-size:1.05rem;
+    line-height:1.4;
+  }
 
   /* ============ FOOTER ============ */
   .spacer{ flex:1; }
@@ -353,7 +442,7 @@
     padding-right:16px;
   }
   .footer-banner .fb-text{
-    font-family:'Baloo 2', sans-serif;
+    font-family:'Baloo 2', 'Trebuchet MS', 'Segoe UI', Arial, sans-serif;
     color:#fff;
     font-size:0.7rem;
     text-align:right;
@@ -396,7 +485,7 @@
     z-index:2;
   }
   .ticket .mode-text{
-    font-family:'Bungee', system-ui;
+    font-family:'Bungee', Impact, 'Arial Black', system-ui, sans-serif;
     color:var(--maroon-deep);
     font-size:0.68rem;
     letter-spacing:0.5px;
@@ -410,13 +499,13 @@
   }
   .bottom-block .l1{
     color:var(--gold);
-    font-family:'Baloo 2', sans-serif;
+    font-family:'Baloo 2', 'Trebuchet MS', 'Segoe UI', Arial, sans-serif;
     font-weight:800;
     font-size:0.85rem;
   }
   .bottom-block .l2{
     color:#fff;
-    font-family:'Baloo 2', sans-serif;
+    font-family:'Baloo 2', 'Trebuchet MS', 'Segoe UI', Arial, sans-serif;
     font-weight:600;
     font-size:0.78rem;
     opacity:0.9;
@@ -424,6 +513,31 @@
 
   .fade-in{ animation: fadeIn 0.35s ease both; }
   @keyframes fadeIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
+  .sr-only{
+    position:absolute;
+    width:1px;
+    height:1px;
+    padding:0;
+    margin:-1px;
+    overflow:hidden;
+    clip:rect(0,0,0,0);
+    white-space:nowrap;
+    border:0;
+  }
+  #confettiCanvas{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:20;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{
+      animation-duration:0.001ms !important;
+      animation-iteration-count:1 !important;
+      scroll-behavior:auto !important;
+      transition-duration:0.001ms !important;
+    }
+  }
 </style>
 </head>
 <body>
@@ -451,8 +565,16 @@
   <!-- TIMER -->
   <div class="timer-row">
     <span id="topicLabel"></span>
-    <span class="timer-pill" id="timerPill">30s</span>
+    <span class="timer-ring" id="timerPill" role="timer" aria-label="30 seconds remaining">
+      <svg viewBox="0 0 40 40" aria-hidden="true">
+        <circle class="timer-track" cx="20" cy="20" r="16"></circle>
+        <circle class="timer-progress" id="timerProgress" cx="20" cy="20" r="16"></circle>
+      </svg>
+      <span class="timer-text" id="timerText">30s</span>
+    </span>
   </div>
+  <div class="sr-only" id="liveRegion" aria-live="polite" aria-atomic="true"></div>
+  <canvas id="confettiCanvas"></canvas>
 
   <!-- GAME AREA (populated by JS) -->
   <div id="gameArea"></div>
@@ -508,16 +630,23 @@ document.getElementById('modeText').textContent = difficulty.toUpperCase();
 ====================================================================== */
 const OPENROUTER_API_KEY = "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";
 const OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
-// Fix 1: allow model cold starts/API latency before falling back offline.
-const AI_RESPONSE_TIMEOUT_MS = 10000;
+const LIVE_AI_ENABLED = window.location.protocol === 'http:' || window.location.protocol === 'https:';
+const AI_RESPONSE_TIMEOUT_MS = 6000;
 const TIMER_WARNING_SECONDS = 10;
+const TIMER_RING_CIRCUMFERENCE = 2 * Math.PI * 16;
 const SLOW_NETWORK_EFFECTIVE_TYPES = new Set(['slow-2g', '2g']);
 const SLOW_NETWORK_MAX_DOWNLINK_MBPS = 0.75;
 const SLOW_NETWORK_MIN_RTT_MS = 1200;
+const LOADING_PHRASES = [
+  'Spinning the wheel...',
+  'The ringmaster is thinking...',
+  'Polishing the spotlight...',
+  'Drawing a challenge ticket...'
+];
 
 // You can use "google/gemini-2.5-flash", "google/gemini-flash-1.5", 
 // "meta-llama/llama-3.3-70b-instruct", or any free/paid model on OpenRouter.
-const OPENROUTER_MODEL = "google/gemma-3-27b-it:free";
+const OPENROUTER_MODEL = "google/gemini-2.5-flash:free";
 
 const DIFFICULTY_DESCRIPTION = {
   Easy:   "a STRICTLY EASY, introductory level (single-step, direct application of rules, small basic numbers only)",
@@ -589,18 +718,43 @@ const MYSTERY_CARDS = {
   }
 };
 
-let recentQuestions = [];
-
 function isKeyConfigured(){
   return !!OPENROUTER_API_KEY
     && OPENROUTER_API_KEY.trim() !== ''
     && !OPENROUTER_API_KEY.includes('PASTE_YOUR');
 }
 
+function buildOpenRouterHeaders(){
+  const headers = {
+    "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+    "Content-Type": "application/json",
+    "X-Title": "Quest'O Carousel"
+  };
+
+  if(window.location.protocol === 'http:' || window.location.protocol === 'https:'){
+    headers["HTTP-Referer"] = window.location.href;
+  }
+
+  return headers;
+}
+
 function pickFallback(diff){
   const fallbackBank = getFallbackBank();
   const bank = fallbackBank[diff] || fallbackBank.Medium;
   return bank[Math.floor(Math.random() * bank.length)];
+}
+
+function pickUniqueFallback(diff){
+  const fallbackBank = getFallbackBank();
+  const bank = fallbackBank[diff] || fallbackBank.Medium;
+  const start = Math.floor(Math.random() * bank.length);
+
+  for(let offset = 0; offset < bank.length; offset++){
+    const candidate = bank[(start + offset) % bank.length];
+    if(hasOneCorrectUniqueChoices(candidate)) return candidate;
+  }
+
+  return bank[start];
 }
 
 function getSlowConnectionReason(){
@@ -692,25 +846,39 @@ function isQuestionPayload(parsed){
     && ["A","B","C"].includes(parsed.correctAnswer) && parsed.solution);
 }
 
+function normalizeChoiceValue(value){
+  return String(value ?? '')
+    .toLowerCase()
+    .replace(/\$/g, '')
+    .replace(/\\left|\\right/g, '')
+    .replace(/[{}\s]/g, '')
+    .replace(/\\dfrac/g, '\\frac')
+    .replace(/−/g, '-')
+    .trim();
+}
+
+function hasOneCorrectUniqueChoices(question){
+  if(!isQuestionPayload(question)) return false;
+  const normalizedChoices = OPTION_LETTERS.map(letter => normalizeChoiceValue(question.options[letter]));
+  return normalizedChoices.every(Boolean) && new Set(normalizedChoices).size === OPTION_LETTERS.length;
+}
+
 function expandQuestionPayload(parsed){
-  return isQuestionPayload(parsed) ? parsed : null;
+  return hasOneCorrectUniqueChoices(parsed) ? parsed : null;
 }
 
 async function generateQuestion(diff){
   let result;
   const slowConnectionReason = getSlowConnectionReason();
 
-  if(!isKeyConfigured()){
-    console.warn('[Quest\'O Carousel] No OpenRouter API key configured — using an offline fallback question.');
+  if(!LIVE_AI_ENABLED){
+    result = pickFallback(diff);
+  } else if(!isKeyConfigured()){
     result = pickFallback(diff);
   } else if(slowConnectionReason){
-    console.warn('[Quest\'O Carousel] Slow connection detected — using an offline fallback question. Reason:', slowConnectionReason);
     result = pickFallback(diff);
   } else {
     const subtopic = SUBTOPICS[Math.floor(Math.random() * SUBTOPICS.length)];
-    const avoidList = recentQuestions.length
-      ? `\nDo NOT reuse any of these recent questions, or trivial number-swapped variants of them:\n- ${recentQuestions.join('\n- ')}`
-      : '';
 
     try {
       const controller = new AbortController();
@@ -718,12 +886,7 @@ async function generateQuestion(diff){
       const res = await fetch(OPENROUTER_ENDPOINT, {
         method: "POST",
         signal: controller.signal,
-        headers: {
-          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": window.location.href,
-          "X-Title": "Quest'O Carousel"
-        },
+        headers: buildOpenRouterHeaders(),
         body: JSON.stringify({
           model: OPENROUTER_MODEL,
           temperature: 0.1, 
@@ -741,8 +904,9 @@ CRITICAL RULES:
 4. ALL math must be wrapped in KaTeX/LaTeX single delimiters: $math$. Do NOT use plain text for math.
 5. EVERY LaTeX backslash in the JSON MUST be double-escaped (e.g., \\\\sqrt, \\\\dfrac, \\\\frac).
 6. Options A, B, and C must contain ONLY the final math answer. No text.
-7. correctAnswer must ALWAYS be "A". The system will shuffle it later.
-8. The solution must be one short sentence maximum with only the critical mathematical steps in LaTeX. No filler or intro text.
+7. Options A, B, and C must be pairwise different. Do not include duplicate values or mathematically equivalent choices.
+8. correctAnswer must ALWAYS be "A". The system will shuffle it later.
+9. The solution must be one short sentence maximum with only the critical mathematical steps in LaTeX. No filler or intro text.
 
 One-Shot Example:
 {"question":"Simplify $\\\\sqrt{16x^2}$, assuming $x \\\\ge 0$.","options":{"A":"$4x$","B":"$16x$","C":"$4x^2$"},"correctAnswer":"A","solution":"$\\\\sqrt{16x^2}=\\\\sqrt{16}\\\\sqrt{x^2}=4x$."}`
@@ -750,8 +914,7 @@ One-Shot Example:
    { 
    role: "user", 
    content: `Create a new question at ${DIFFICULTY_DESCRIPTION[diff]}. 
-Sub-topic: ${subtopic}.
-${avoidList}`
+Sub-topic: ${subtopic}.`
             }
           ]
         })
@@ -792,20 +955,16 @@ ${avoidList}`
 
       result = parsed;
     } catch(err) {
-      const reason = err?.name === 'AbortError'
-        ? `OpenRouter did not respond within ${AI_RESPONSE_TIMEOUT_MS / 1000} seconds`
-        : (err?.message || err);
-      console.warn('[Quest\'O Carousel] OpenRouter question generation failed — using offline fallback. Reason:', reason);
       result = pickFallback(diff);
     }
   }
 
+  if(!hasOneCorrectUniqueChoices(result)){
+    result = pickUniqueFallback(diff);
+  }
+
   // Randomize answer placement
   result = shuffleCorrectLetter(result);
-
-  recentQuestions.push(result.question);
-  if(recentQuestions.length > 5) recentQuestions.shift();
-
   return result;
 }
 
@@ -917,11 +1076,12 @@ function buildFallbackBank(){
   });
 
   for(let n = 1; n <= 20; n++){
+    const thirdChoice = n === 1 ? `${n + 1}x` : `${n * n}x`;
     easy.push(makeQuestion(
       `Simplify: $\\sqrt{${n * n}x^2}$, where $x \\ge 0$`,
       `${n}x`,
       `${n}x^2`,
-      `${n * n}x`,
+      thirdChoice,
       `$\\sqrt{${n * n}x^2}=\\sqrt{${n * n}}\\sqrt{x^2}=${n}x$ when $x \\ge 0$.`
     ));
   }
@@ -956,7 +1116,7 @@ function buildFallbackBank(){
     medium.push(makeQuestion(
       `Evaluate: $${value}^{\\frac{${exponent - 1}}{${exponent}}}$`,
       `${n ** (exponent - 1)}`,
-      `${n * (exponent - 1)}`,
+      `${exponent === 2 ? n + 1 : n * (exponent - 1)}`,
       `${value * (exponent - 1)}`,
       `$${value}^{\\frac{${exponent - 1}}{${exponent}}}=(\\sqrt[${exponent}]{${value}})^{${exponent - 1}}=${n}^{${exponent - 1}}=${n ** (exponent - 1)}$.`
     ));
@@ -1116,17 +1276,31 @@ function getFallbackBank(){
 ====================================================================== */
 const gameArea = document.getElementById('gameArea');
 const timerPill = document.getElementById('timerPill');
+const timerText = document.getElementById('timerText');
+const timerProgress = document.getElementById('timerProgress');
 const topicLabel = document.getElementById('topicLabel');
+const liveRegion = document.getElementById('liveRegion');
+const confettiCanvas = document.getElementById('confettiCanvas');
 topicLabel.textContent = 'Math Challenge';
+timerProgress.style.strokeDasharray = TIMER_RING_CIRCUMFERENCE;
 
 let currentQuestion = null;
 let timeLeft = cfg.time;
 let timerInterval = null;
+let loadingPhraseInterval = null;
 let answered = false;
 let optionButtons = [];
 let audioCtx = null;
 let audioUnlocked = false;
 const latexCache = new Map();
+
+function announce(message){
+  if(liveRegion) liveRegion.textContent = message;
+}
+
+function vibrate(pattern){
+  if('vibrate' in navigator) navigator.vibrate(pattern);
+}
 
 function getAudioContext(createIfMissing = false){
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -1191,6 +1365,60 @@ function playSound(name){
   }
 }
 
+function fireConfetti(){
+  if(!confettiCanvas || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const ctx = confettiCanvas.getContext('2d');
+  if(!ctx) return;
+
+  const dpr = window.devicePixelRatio || 1;
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  confettiCanvas.width = Math.floor(width * dpr);
+  confettiCanvas.height = Math.floor(height * dpr);
+  confettiCanvas.style.width = `${width}px`;
+  confettiCanvas.style.height = `${height}px`;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  const colors = ['#f6c744', '#d9541f', '#8f1d1d', '#1f5a2a', '#f6ecd9'];
+  const particles = Array.from({ length: 60 }, () => ({
+    x: width / 2,
+    y: Math.min(height * 0.42, 320),
+    vx: (Math.random() - 0.5) * 8,
+    vy: -Math.random() * 7 - 3,
+    size: Math.random() * 5 + 4,
+    rotation: Math.random() * Math.PI,
+    spin: (Math.random() - 0.5) * 0.25,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    life: 80 + Math.random() * 25
+  }));
+
+  let frame = 0;
+  function draw(){
+    frame++;
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.16;
+      p.rotation += p.spin;
+      p.life--;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation);
+      ctx.globalAlpha = Math.max(0, p.life / 90);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.62);
+      ctx.restore();
+    });
+    if(frame < 110 && particles.some(p => p.life > 0)){
+      requestAnimationFrame(draw);
+    } else {
+      ctx.clearRect(0, 0, width, height);
+    }
+  }
+  draw();
+}
+
 function pickMysteryCard(diff){
   const cards = MYSTERY_CARDS[diff] || MYSTERY_CARDS.Medium;
   const isBenefit = Math.random() < 0.25;
@@ -1242,15 +1470,23 @@ function marqueeWrap(innerHtml, extraClass=''){
    3b. LOADING STATE — shown while Gemini generates the question
 ====================================================================== */
 function renderLoading(){
+  clearInterval(loadingPhraseInterval);
   gameArea.innerHTML = `
     <div class="question-box fade-in">
       ${marqueeWrap(`<div style="text-align:center; padding:20px 0;">
-        <div style="font-family:'Bungee', system-ui; color:var(--gold); font-size:0.95rem;">
-          Summoning your question&hellip;
-        </div>
+        <div class="loading-ring" aria-hidden="true"></div>
+        <div class="loading-phrase" id="loadingPhrase">${LOADING_PHRASES[0]}</div>
       </div>`)}
     </div>
   `;
+  announce(LOADING_PHRASES[0]);
+  let phraseIndex = 0;
+  loadingPhraseInterval = setInterval(() => {
+    phraseIndex = (phraseIndex + 1) % LOADING_PHRASES.length;
+    const phraseEl = document.getElementById('loadingPhrase');
+    if(phraseEl) phraseEl.textContent = LOADING_PHRASES[phraseIndex];
+    announce(LOADING_PHRASES[phraseIndex]);
+  }, 2500);
 }
 
 /* ======================================================================
@@ -1264,12 +1500,13 @@ async function startRound(){
   renderLoading();
 
   currentQuestion = await generateQuestion(difficulty);
+  clearInterval(loadingPhraseInterval);
   renderActiveGame();
 }
 
 function renderActiveGame(){
   gameArea.innerHTML = `
-    <div class="question-box marquee-wrap fade-in">
+    <div class="question-box marquee-wrap card-reveal">
       ${marqueeWrap(`<div id="questionRender">${renderLatex(currentQuestion.question)}</div>`)}
     </div>
     <div class="options fade-in" id="optionsWrap">
@@ -1280,6 +1517,7 @@ function renderActiveGame(){
       `).join('')}
     </div>
   `;
+  announce(`Question ready. You have ${cfg.time} seconds.`);
 
   optionButtons = [...gameArea.querySelectorAll('.opt-btn')];
   gameArea.querySelector('#optionsWrap').addEventListener('click', event => {
@@ -1295,7 +1533,11 @@ function renderActiveGame(){
   timerInterval = setInterval(()=>{
     timeLeft = Math.max(0, Math.ceil((roundEndsAt - Date.now()) / 1000));
     updateTimerPill();
-    if(timeLeft !== lastDisplayedSecond && timeLeft > 0 && timeLeft <= TIMER_WARNING_SECONDS) playSound('timer');
+    if(timeLeft !== lastDisplayedSecond && timeLeft > 0 && timeLeft <= TIMER_WARNING_SECONDS){
+      playSound('timer');
+      vibrate(20);
+      announce(`${timeLeft} seconds remaining.`);
+    }
     lastDisplayedSecond = timeLeft;
     if(timeLeft <= 0){
       clearInterval(timerInterval);
@@ -1305,7 +1547,11 @@ function renderActiveGame(){
 }
 
 function updateTimerPill(){
-  timerPill.textContent = `${Math.max(timeLeft,0)}s`;
+  const safeTime = Math.max(timeLeft,0);
+  const progress = cfg.time ? safeTime / cfg.time : 0;
+  timerText.textContent = `${safeTime}s`;
+  timerPill.setAttribute('aria-label', `${safeTime} seconds remaining`);
+  timerProgress.style.strokeDashoffset = `${TIMER_RING_CIRCUMFERENCE * (1 - progress)}`;
   timerPill.classList.toggle('low', timeLeft <= TIMER_WARNING_SECONDS);
 }
 
@@ -1316,10 +1562,13 @@ function handleAnswer(letter){
 
   const isCorrect = letter === currentQuestion.correctAnswer;
   playSound(isCorrect ? 'correct' : 'wrong');
+  vibrate(isCorrect ? [40, 30, 60] : [100, 50, 100]);
   optionButtons.forEach(b=>{
     if(b.dataset.letter === currentQuestion.correctAnswer) b.classList.add('correct');
-    else if(b.dataset.letter === letter) b.classList.add('wrong');
+    else if(b.dataset.letter === letter) b.classList.add('wrong', 'shake');
   });
+  announce(isCorrect ? 'Correct answer.' : 'Incorrect answer. Penalty phase.');
+  if(isCorrect) fireConfetti();
 
   setTimeout(()=>{
     if(isCorrect) renderCorrect();
@@ -1332,6 +1581,8 @@ function handleTimeout(){
   clearInterval(timerInterval);
   optionButtons.forEach(b => b.classList.add('disabled'));
   playSound('wrong');
+  vibrate([100, 50, 100]);
+  announce('Time expired. Penalty phase.');
   renderIncorrect('Time Expired!');
 }
 
@@ -1361,15 +1612,15 @@ function renderCorrect(){
   const tileWord = cfg.tiles === 1 ? 'tile' : 'tiles';
   gameArea.innerHTML = `
     <div class="fade-in">
-      <div class="result-banner good">Correct! Move forward ${cfg.tiles} ${tileWord}.</div>
+      ${renderResultTicket('good', `CORRECT - ${cfg.tiles} ${tileWord.toUpperCase()}`, `Show this ticket to your Game Master.`)}
       <div class="solution-box">
         <span class="label">SOLUTION</span>
         ${renderLatex(currentQuestion.solution)}
       </div>
-      <button class="skip-solution-btn" id="startCloseBtn">Start Closing Timer</button>
     </div>
   `;
-  gameArea.querySelector('#startCloseBtn').addEventListener('click', renderTermination);
+  announce(`Result ticket. Correct. Move forward ${cfg.tiles} ${tileWord}.`);
+  setTimeout(renderTermination, 5000);
 }
 
 /* ======================================================================
@@ -1390,14 +1641,18 @@ function renderIncorrect(headline){
       <div id="penaltyResult"></div>
     </div>
   `;
+  announce(`${headline} Skip your turn or draw a mystery card.`);
 
   const penaltyRow = gameArea.querySelector('#penaltyRow');
   const penaltyResult = gameArea.querySelector('#penaltyResult');
   gameArea.querySelector('#skipBtn').addEventListener('click', () => {
     penaltyRow.style.display = 'none';
+    playSound('wrong');
+    vibrate([100, 50, 100]);
     penaltyResult.innerHTML = `
-      <div class="card-result penalty fade-in">You chose to skip your turn.</div>
+      ${renderResultTicket('bad', 'INCORRECT / SKIP TURN', 'Penalty: Skip your turn.')}
     `;
+    announce('Skip turn selected. Result ticket. Incorrect, skip turn.');
     setTimeout(renderTermination, 5000);
   });
 
@@ -1405,11 +1660,23 @@ function renderIncorrect(headline){
     penaltyRow.style.display = 'none';
     const { isBenefit, message } = pickMysteryCard(difficulty);
     playSound(isBenefit ? 'mysteryBenefit' : 'mysteryPenalty');
+    vibrate([100, 50, 100]);
     penaltyResult.innerHTML = `
-      <div class="card-result ${isBenefit ? 'benefit' : 'penalty'} fade-in">${message}</div>
+      ${renderResultTicket('bad', 'INCORRECT / PENALTY APPLIED', message)}
     `;
+    announce(`Mystery card drawn. ${message}. Result ticket. Incorrect, penalty applied.`);
     setTimeout(renderTermination, 5000);
   });
+}
+
+function renderResultTicket(kind, outcome, detail){
+  return `
+    <div class="ticket-card ${kind}">
+      <div class="stamp">RESULT TICKET</div>
+      <div class="outcome">${outcome}</div>
+      <div class="detail">${detail}</div>
+    </div>
+  `;
 }
 
 /* ======================================================================
@@ -1418,56 +1685,25 @@ function renderIncorrect(headline){
 function renderTermination(){
   gameArea.innerHTML = `
     <div class="term-wrap fade-in">
-      <div class="term-msg" id="termMsg">Session closing in <span id="closeCount">5</span> seconds. You may safely close this tab.</div>
-      <div class="term-count" id="countCircle">5</div>
+      <div class="round-complete">Round Complete! Close this tab and scan a new code to play again.</div>
+      <div class="term-msg" id="termMsg">This one-shot session is finished.</div>
       <div class="term-fallback" id="fallbackMsg" style="display:none;">
-        This tab couldn't be closed automatically — that's normal browser behavior. Feel free to close it yourself, or play again below.
+        Your browser kept the tab open. Please close it now and scan a new code for another round.
       </div>
-      <button class="penalty-btn" id="playAgainBtn" style="display:none; flex:0 0 auto; padding:12px 22px;">Play Again</button>
     </div>
   `;
-
-  let count = 5;
-  const countCircle = document.getElementById('countCircle');
-  const closeCountSpan = document.getElementById('closeCount');
   const fallbackMsg = document.getElementById('fallbackMsg');
-  const playAgainBtn = document.getElementById('playAgainBtn');
-
-  playAgainBtn.addEventListener('click', resetGame);
-
-  const closeTimer = setInterval(()=>{
-    count--;
-    if(count >= 0){
-      countCircle.textContent = count;
-      closeCountSpan.textContent = count;
-    }
-    if(count <= 0){
-      clearInterval(closeTimer);
-
-      // Most browsers silently ignore window.close() on tabs the page
-      // didn't open itself, so this can't be relied on to actually work —
-      // wrap it defensively and always fall back to a manual option.
+  announce('Round complete. Close this tab and scan a new code to play again.');
+  setTimeout(()=>{
+    if(window.location.protocol === 'http:' || window.location.protocol === 'https:'){
       try{
         window.close();
-      }catch(e){
-        console.warn('[Quest\'O Carousel] window.close() was blocked by the browser:', e);
-      }
-
-      // Give the browser a beat to attempt the close; if we're still here,
-      // show the manual-close message and a way to keep playing.
-      setTimeout(()=>{
-        fallbackMsg.style.display = 'block';
-        playAgainBtn.style.display = 'inline-block';
-      }, 300);
+      }catch(e){}
     }
-  }, 1000);
-}
-
-/* Resets in-memory game state and starts a new round without a full page
-   reload, so the carousel can be replayed indefinitely from one tab. */
-function resetGame(){
-  recentQuestions = [];
-  startRound();
+    setTimeout(()=>{
+      fallbackMsg.style.display = 'block';
+    }, 300);
+  }, 900);
 }
 
 /* ======================================================================
