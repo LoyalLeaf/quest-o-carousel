@@ -327,7 +327,7 @@
     cursor:pointer;
     flex:1;
     text-align:center;
-    font-family:'Bungee', system-ui;
+    font-family:'Bungee', Impact, 'Arial Black', system-ui, sans-serif;
     font-size:0.78rem;
     color:var(--gold);
     background: linear-gradient(180deg, var(--crimson), var(--maroon));
@@ -630,8 +630,9 @@ document.getElementById('modeText').textContent = difficulty.toUpperCase();
 ====================================================================== */
 const OPENROUTER_API_KEY = "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";
 const OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
-const LIVE_AI_ENABLED = window.location.protocol === 'http:' || window.location.protocol === 'https:';
-const AI_RESPONSE_TIMEOUT_MS = 6000;
+const HAS_HTTP_CONTEXT = window.location.protocol === 'http:' || window.location.protocol === 'https:';
+// Fix 1: allow model cold starts/API latency before falling back offline.
+const AI_RESPONSE_TIMEOUT_MS = 10000;
 const TIMER_WARNING_SECONDS = 10;
 const TIMER_RING_CIRCUMFERENCE = 2 * Math.PI * 16;
 const SLOW_NETWORK_EFFECTIVE_TYPES = new Set(['slow-2g', '2g']);
@@ -646,7 +647,7 @@ const LOADING_PHRASES = [
 
 // You can use "google/gemini-2.5-flash", "google/gemini-flash-1.5", 
 // "meta-llama/llama-3.3-70b-instruct", or any free/paid model on OpenRouter.
-const OPENROUTER_MODEL = "qwen/qwen3-30b-a3b:free";
+const OPENROUTER_MODEL = "google/gemini-2.5-flash";
 
 const DIFFICULTY_DESCRIPTION = {
   Easy:   "a STRICTLY EASY, introductory level (single-step, direct application of rules, small basic numbers only)",
@@ -718,6 +719,8 @@ const MYSTERY_CARDS = {
   }
 };
 
+let recentQuestions = [];
+
 function isKeyConfigured(){
   return !!OPENROUTER_API_KEY
     && OPENROUTER_API_KEY.trim() !== ''
@@ -731,7 +734,7 @@ function buildOpenRouterHeaders(){
     "X-Title": "Quest'O Carousel"
   };
 
-  if(window.location.protocol === 'http:' || window.location.protocol === 'https:'){
+  if(HAS_HTTP_CONTEXT){
     headers["HTTP-Referer"] = window.location.href;
   }
 
@@ -871,14 +874,17 @@ async function generateQuestion(diff){
   let result;
   const slowConnectionReason = getSlowConnectionReason();
 
-  if(!LIVE_AI_ENABLED){
-    result = pickFallback(diff);
-  } else if(!isKeyConfigured()){
+  if(!isKeyConfigured()){
+    console.warn('[Quest\'O Carousel] No OpenRouter API key configured — using an offline fallback question.');
     result = pickFallback(diff);
   } else if(slowConnectionReason){
+    console.warn('[Quest\'O Carousel] Slow connection detected — using an offline fallback question. Reason:', slowConnectionReason);
     result = pickFallback(diff);
   } else {
     const subtopic = SUBTOPICS[Math.floor(Math.random() * SUBTOPICS.length)];
+    const avoidList = recentQuestions.length
+      ? `\nDo NOT reuse any of these recent questions, or trivial number-swapped variants of them:\n- ${recentQuestions.join('\n- ')}`
+      : '';
 
     try {
       const controller = new AbortController();
@@ -891,7 +897,7 @@ async function generateQuestion(diff){
           model: OPENROUTER_MODEL,
           temperature: 0.1, 
           response_format: { type: "json_object" }, 
-          max_tokens: 250,
+          max_tokens: 650,
           messages: [
             { 
               role: "system", 
@@ -904,9 +910,8 @@ CRITICAL RULES:
 4. ALL math must be wrapped in KaTeX/LaTeX single delimiters: $math$. Do NOT use plain text for math.
 5. EVERY LaTeX backslash in the JSON MUST be double-escaped (e.g., \\\\sqrt, \\\\dfrac, \\\\frac).
 6. Options A, B, and C must contain ONLY the final math answer. No text.
-7. Options A, B, and C must be pairwise different. Do not include duplicate values or mathematically equivalent choices.
-8. correctAnswer must ALWAYS be "A". The system will shuffle it later.
-9. The solution must be one short sentence maximum with only the critical mathematical steps in LaTeX. No filler or intro text.
+7. correctAnswer must ALWAYS be "A". The system will shuffle it later.
+8. The solution must be one short sentence maximum with only the critical mathematical steps in LaTeX. No filler or intro text.
 
 One-Shot Example:
 {"question":"Simplify $\\\\sqrt{16x^2}$, assuming $x \\\\ge 0$.","options":{"A":"$4x$","B":"$16x$","C":"$4x^2$"},"correctAnswer":"A","solution":"$\\\\sqrt{16x^2}=\\\\sqrt{16}\\\\sqrt{x^2}=4x$."}`
@@ -914,7 +919,8 @@ One-Shot Example:
    { 
    role: "user", 
    content: `Create a new question at ${DIFFICULTY_DESCRIPTION[diff]}. 
-Sub-topic: ${subtopic}.`
+Sub-topic: ${subtopic}.
+${avoidList}`
             }
           ]
         })
@@ -955,6 +961,10 @@ Sub-topic: ${subtopic}.`
 
       result = parsed;
     } catch(err) {
+      const reason = err?.name === 'AbortError'
+        ? `OpenRouter did not respond within ${AI_RESPONSE_TIMEOUT_MS / 1000} seconds`
+        : (err?.message || err);
+      console.warn('[Quest\'O Carousel] OpenRouter question generation failed — using offline fallback. Reason:', reason);
       result = pickFallback(diff);
     }
   }
@@ -965,6 +975,10 @@ Sub-topic: ${subtopic}.`
 
   // Randomize answer placement
   result = shuffleCorrectLetter(result);
+
+  recentQuestions.push(result.question);
+  if(recentQuestions.length > 5) recentQuestions.shift();
+
   return result;
 }
 
@@ -1076,12 +1090,11 @@ function buildFallbackBank(){
   });
 
   for(let n = 1; n <= 20; n++){
-    const thirdChoice = n === 1 ? `${n + 1}x` : `${n * n}x`;
     easy.push(makeQuestion(
       `Simplify: $\\sqrt{${n * n}x^2}$, where $x \\ge 0$`,
       `${n}x`,
       `${n}x^2`,
-      thirdChoice,
+      `${n * n}x`,
       `$\\sqrt{${n * n}x^2}=\\sqrt{${n * n}}\\sqrt{x^2}=${n}x$ when $x \\ge 0$.`
     ));
   }
@@ -1116,7 +1129,7 @@ function buildFallbackBank(){
     medium.push(makeQuestion(
       `Evaluate: $${value}^{\\frac{${exponent - 1}}{${exponent}}}$`,
       `${n ** (exponent - 1)}`,
-      `${exponent === 2 ? n + 1 : n * (exponent - 1)}`,
+      `${n * (exponent - 1)}`,
       `${value * (exponent - 1)}`,
       `$${value}^{\\frac{${exponent - 1}}{${exponent}}}=(\\sqrt[${exponent}]{${value}})^{${exponent - 1}}=${n}^{${exponent - 1}}=${n ** (exponent - 1)}$.`
     ));
@@ -1685,25 +1698,56 @@ function renderResultTicket(kind, outcome, detail){
 function renderTermination(){
   gameArea.innerHTML = `
     <div class="term-wrap fade-in">
-      <div class="round-complete">Round Complete! Close this tab and scan a new code to play again.</div>
-      <div class="term-msg" id="termMsg">This one-shot session is finished.</div>
+      <div class="term-msg" id="termMsg">Session closing in <span id="closeCount">5</span> seconds. You may safely close this tab.</div>
+      <div class="term-count" id="countCircle">5</div>
       <div class="term-fallback" id="fallbackMsg" style="display:none;">
-        Your browser kept the tab open. Please close it now and scan a new code for another round.
+        This tab couldn't be closed automatically — that's normal browser behavior. Feel free to close it yourself, or play again below.
       </div>
+      <button class="penalty-btn" id="playAgainBtn" style="display:none; flex:0 0 auto; padding:12px 22px;">Play Again</button>
     </div>
   `;
+
+  let count = 5;
+  const countCircle = document.getElementById('countCircle');
+  const closeCountSpan = document.getElementById('closeCount');
   const fallbackMsg = document.getElementById('fallbackMsg');
-  announce('Round complete. Close this tab and scan a new code to play again.');
-  setTimeout(()=>{
-    if(window.location.protocol === 'http:' || window.location.protocol === 'https:'){
+  const playAgainBtn = document.getElementById('playAgainBtn');
+
+  playAgainBtn.addEventListener('click', resetGame);
+
+  const closeTimer = setInterval(()=>{
+    count--;
+    if(count >= 0){
+      countCircle.textContent = count;
+      closeCountSpan.textContent = count;
+    }
+    if(count <= 0){
+      clearInterval(closeTimer);
+
+      // Most browsers silently ignore window.close() on tabs the page
+      // didn't open itself, so this can't be relied on to actually work —
+      // wrap it defensively and always fall back to a manual option.
       try{
         window.close();
-      }catch(e){}
+      }catch(e){
+        console.warn('[Quest\'O Carousel] window.close() was blocked by the browser:', e);
+      }
+
+      // Give the browser a beat to attempt the close; if we're still here,
+      // show the manual-close message and a way to keep playing.
+      setTimeout(()=>{
+        fallbackMsg.style.display = 'block';
+        playAgainBtn.style.display = 'inline-block';
+      }, 300);
     }
-    setTimeout(()=>{
-      fallbackMsg.style.display = 'block';
-    }, 300);
-  }, 900);
+  }, 1000);
+}
+
+/* Resets in-memory game state and starts a new round without a full page
+   reload, so the carousel can be replayed indefinitely from one tab. */
+function resetGame(){
+  recentQuestions = [];
+  startRound();
 }
 
 /* ======================================================================
